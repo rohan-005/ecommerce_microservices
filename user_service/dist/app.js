@@ -6,4 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.get("/health", (_, res) => {
+    res.status(200).json({
+        success: true,
+        message: "User Service is running",
+    });
+});
 exports.default = app;

@@ -1,10 +1,20 @@
 import app from "./app";
-import dotenv from "dotenv";
+import { env } from "./config/env";
+import { connectDB } from "./config/db";
+import { connectRedis } from "./config/redis";
 
-dotenv.config();
+const startServer = async () => {
+  try {
+    await connectDB();
+    await connectRedis();
 
-const PORT = process.env.PORT || 5001;
+    app.listen(env.PORT, () => {
+      console.log(`User Service running on port ${env.PORT}`);
+    });
+  } catch (error) {
+    console.error(error);
+    process.exit(1);
+  }
+};
 
-app.listen(PORT, () => {
-    console.log(`User Service running on ${PORT}`);
-});
+startServer();
