@@ -9,8 +9,9 @@ const user_repository_1 = require("../repositories/user.repository");
 const pending_repository_1 = require("../repositories/pending.repository");
 const otp_1 = require("../utils/otp");
 const publisher_1 = require("../events/publisher");
-const PendingRegistration_1 = __importDefault(require("../models/PendingRegistration"));
+const password_1 = require("../utils/password");
 const jwt_1 = require("../utils/jwt");
+const PendingRegistration_1 = __importDefault(require("../models/PendingRegistration"));
 class AuthService {
     async register(data) {
         const existingUser = await user_repository_1.userRepository.findByEmail(data.email);
@@ -18,19 +19,16 @@ class AuthService {
             throw new ApiError_1.ApiError(409, "Email already registered");
         }
         const otp = (0, otp_1.generateOTP)();
+        const hashedPassword = await (0, password_1.hashPassword)(data.password);
         const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
         await pending_repository_1.pendingRepository.replace({
             name: data.name,
             email: data.email,
-            password: data.password,
+            password: hashedPassword,
             otp,
             expiresAt,
         });
-        await publisher_1.publisher.publish("user.verification.requested", {
-            email: data.email,
-            name: data.name,
-            otp,
-        });
+        await publisher_1.eventPublisher.publishVerificationEmail(data.email, data.name, otp);
         return {
             success: true,
             message: "Verification OTP sent successfully.",

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const env = {
-    PORT: Number(process.env.PORT) || 5001,
+    PORT: Number(process.env.PORT) || 5002,
 
     REDIS_URL: process.env.REDIS_URL!,
 

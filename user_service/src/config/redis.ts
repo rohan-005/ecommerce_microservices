@@ -6,13 +6,23 @@ export const redisClient = createClient({
 });
 
 redisClient.on("connect", () => {
-  console.log("Redis Connected");
+  console.log("Connecting to Redis...");
+});
+
+redisClient.on("ready", () => {
+  console.log("Redis connected successfully.");
 });
 
 redisClient.on("error", (err) => {
   console.error("Redis Error:", err);
 });
 
-export const connectRedis = async () => {
-  await redisClient.connect();
-};
+redisClient.on("reconnecting", () => {
+  console.log("Reconnecting to Redis...");
+});
+
+export async function connectRedis() {
+  if (!redisClient.isOpen) {
+    await redisClient.connect();
+  }
+}
