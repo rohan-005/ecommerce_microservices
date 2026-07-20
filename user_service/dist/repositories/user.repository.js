@@ -5,12 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userRepository = exports.UserRepository = void 0;
 const User_1 = __importDefault(require("../models/User"));
+const PendingRegistration_1 = __importDefault(require("../models/PendingRegistration"));
 class UserRepository {
     async create(userData) {
         return User_1.default.create(userData);
     }
     async findByEmail(email) {
-        return User_1.default.findOne({ email });
+        return PendingRegistration_1.default.findOne({ email }).select("+password +otp");
     }
     async findById(id) {
         return User_1.default.findById(id);

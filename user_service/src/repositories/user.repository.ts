@@ -1,5 +1,6 @@
 import User from "../models/User";
 import { IUser } from "../interfaces/user.interface";
+import PendingRegistration from "../models/PendingRegistration";
 
 export class UserRepository {
   async create(userData: Partial<IUser>) {
@@ -7,9 +8,9 @@ export class UserRepository {
   }
 
   async findByEmail(email: string) {
-    return User.findOne({ email });
+    return PendingRegistration.findOne({ email }).select("+password +otp");
   }
-
+  
   async findById(id: string) {
     return User.findById(id);
   }
@@ -22,7 +23,7 @@ export class UserRepository {
       },
       {
         new: true,
-      }
+      },
     );
   }
 

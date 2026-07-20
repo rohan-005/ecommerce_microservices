@@ -1,40 +1,75 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authService = void 0;
 const ApiError_1 = require("../utils/ApiError");
 const user_repository_1 = require("../repositories/user.repository");
-const verification_repository_1 = require("../repositories/verification.repository");
+const pending_repository_1 = require("../repositories/pending.repository");
 const otp_1 = require("../utils/otp");
 const publisher_1 = require("../events/publisher");
+const PendingRegistration_1 = __importDefault(require("../models/PendingRegistration"));
+const jwt_1 = require("../utils/jwt");
 class AuthService {
     async register(data) {
-        // Check if email already exists
         const existingUser = await user_repository_1.userRepository.findByEmail(data.email);
         if (existingUser) {
             throw new ApiError_1.ApiError(409, "Email already registered");
         }
-        // Create user
-        const user = await user_repository_1.userRepository.create({
+        const otp = (0, otp_1.generateOTP)();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await pending_repository_1.pendingRepository.replace({
             name: data.name,
             email: data.email,
             password: data.password,
+            otp,
+            expiresAt,
         });
-        // Generate OTP
-        const otp = (0, otp_1.generateOTP)();
-        // OTP expires after 10 minutes
-        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        // Store OTP
-        await verification_repository_1.verificationRepository.replaceToken(user._id.toString(), otp, expiresAt);
-        // Publish event for Email Service
         await publisher_1.publisher.publish("user.verification.requested", {
-            userId: user._id,
-            name: user.name,
-            email: user.email,
+            email: data.email,
+            name: data.name,
             otp,
         });
         return {
             success: true,
-            message: "Registration successful. Please verify your email.",
+            message: "Verification OTP sent successfully.",
+        };
+    }
+    async replace(data) {
+        await PendingRegistration_1.default.findOneAndDelete({
+            email: data.email,
+        });
+        return PendingRegistration_1.default.create(data);
+    }
+    async verifyEmail(data) {
+        const pending = await pending_repository_1.pendingRepository.findByEmail(data.email);
+        if (!pending) {
+            throw new ApiError_1.ApiError(404, "Verification request not found.");
+        }
+        const otpMatched = await pending.compareOTP(data.otp);
+        if (!otpMatched) {
+            throw new ApiError_1.ApiError(400, "Invalid OTP.");
+        }
+        const user = await user_repository_1.userRepository.create({
+            name: pending.name,
+            email: pending.email,
+            password: pending.password,
+            isVerified: true,
+        });
+        await pending_repository_1.pendingRepository.deleteByEmail(pending.email);
+        const accessToken = (0, jwt_1.generateAccessToken)({
+            userId: user.id,
+            role: user.role,
+        });
+        const refreshToken = (0, jwt_1.generateRefreshToken)({
+            userId: user.id,
+            role: user.role,
+        });
+        return {
+            user,
+            accessToken,
+            refreshToken,
         };
     }
 }

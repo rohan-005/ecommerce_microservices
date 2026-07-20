@@ -20,4 +20,15 @@ export const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "Must contain one special character"),
 });
 
+export const verifyEmailSchema = z.object({
+  email: z.string().email(),
+
+  otp: z
+    .string()
+    .length(6),
+});
+
+export type VerifyEmailDto =
+  z.infer<typeof verifyEmailSchema>;
+
 export type RegisterDto = z.infer<typeof registerSchema>;

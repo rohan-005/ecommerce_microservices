@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerSchema = void 0;
+exports.verifyEmailSchema = exports.registerSchema = void 0;
 const zod_1 = require("zod");
 exports.registerSchema = zod_1.z.object({
     name: zod_1.z
@@ -18,4 +18,10 @@ exports.registerSchema = zod_1.z.object({
         .regex(/[a-z]/, "Must contain one lowercase letter")
         .regex(/[0-9]/, "Must contain one number")
         .regex(/[^A-Za-z0-9]/, "Must contain one special character"),
+});
+exports.verifyEmailSchema = zod_1.z.object({
+    email: zod_1.z.string().email(),
+    otp: zod_1.z
+        .string()
+        .length(6),
 });
