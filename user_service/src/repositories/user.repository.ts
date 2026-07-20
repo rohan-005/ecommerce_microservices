@@ -2,8 +2,8 @@ import User from "../models/User";
 import { IUser } from "../interfaces/user.interface";
 
 export class UserRepository {
-  async create(user: Partial<IUser>) {
-    return User.create(user);
+  async create(userData: Partial<IUser>) {
+    return User.create(userData);
   }
 
   async findByEmail(email: string) {
@@ -14,9 +14,9 @@ export class UserRepository {
     return User.findById(id);
   }
 
-  async verifyUser(id: string) {
+  async updateVerificationStatus(userId: string) {
     return User.findByIdAndUpdate(
-      id,
+      userId,
       {
         isVerified: true,
       },
@@ -25,4 +25,10 @@ export class UserRepository {
       }
     );
   }
+
+  async delete(userId: string) {
+    return User.findByIdAndDelete(userId);
+  }
 }
+
+export const userRepository = new UserRepository();

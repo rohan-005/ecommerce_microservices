@@ -10,6 +10,8 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const morgan_1 = __importDefault(require("morgan"));
 const error_middleware_1 = require("./middleware/error.middleware");
 const notFound_middleware_1 = require("./middleware/notFound.middleware");
+//routes
+const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const app = (0, express_1.default)();
 // Security
 app.use((0, helmet_1.default)());
@@ -33,7 +35,7 @@ app.get("/health", (_, res) => {
     });
 });
 // TODO: Routes
-// app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/auth", auth_routes_1.default);
 // 404 Handler
 app.use(notFound_middleware_1.notFoundHandler);
 // Global Error Handler

@@ -7,6 +7,8 @@ import morgan from "morgan";
 import { errorHandler } from "./middleware/error.middleware";
 import { notFoundHandler } from "./middleware/notFound.middleware";
 
+//routes
+import authRoutes from "./routes/auth.routes";
 const app = express();
 
 // Security
@@ -30,6 +32,8 @@ app.use(express.urlencoded({ extended: true }));
 // Cookies
 app.use(cookieParser());
 
+
+
 // Health Check
 app.get("/health", (_, res) => {
   res.status(200).json({
@@ -39,7 +43,7 @@ app.get("/health", (_, res) => {
 });
 
 // TODO: Routes
-// app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 
 // 404 Handler
 app.use(notFoundHandler);
