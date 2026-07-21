@@ -49,6 +49,10 @@ class AuthService {
         if (!otpMatched) {
             throw new ApiError_1.ApiError(400, "Invalid OTP.");
         }
+        if (pending.expiresAt.getTime() < Date.now()) {
+            await pending_repository_1.pendingRepository.deleteByEmail(data.email);
+            throw new ApiError_1.ApiError(400, "OTP expired.");
+        }
         const user = await user_repository_1.userRepository.create({
             name: pending.name,
             email: pending.email,
@@ -65,6 +69,8 @@ class AuthService {
             role: user.role,
         });
         return {
+            success: true,
+            message: "Email verified successfully.",
             user,
             accessToken,
             refreshToken,

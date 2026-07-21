@@ -1,11 +1,7 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Name must be at least 2 characters")
-    .max(100),
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
 
   email: z
     .email("Invalid email address")
@@ -21,14 +17,10 @@ export const registerSchema = z.object({
 });
 
 export const verifyEmailSchema = z.object({
-  email: z.string().email(),
-
-  otp: z
-    .string()
-    .length(6),
+  email: z.email(),
+  otp: z.string().length(6),
 });
 
-export type VerifyEmailDto =
-  z.infer<typeof verifyEmailSchema>;
+export type VerifyEmailDto = z.infer<typeof verifyEmailSchema>;
 
 export type RegisterDto = z.infer<typeof registerSchema>;

@@ -3,11 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyEmailSchema = exports.registerSchema = void 0;
 const zod_1 = require("zod");
 exports.registerSchema = zod_1.z.object({
-    name: zod_1.z
-        .string()
-        .trim()
-        .min(2, "Name must be at least 2 characters")
-        .max(100),
+    name: zod_1.z.string().trim().min(2, "Name must be at least 2 characters").max(100),
     email: zod_1.z
         .email("Invalid email address")
         .transform((email) => email.toLowerCase()),
@@ -20,8 +16,6 @@ exports.registerSchema = zod_1.z.object({
         .regex(/[^A-Za-z0-9]/, "Must contain one special character"),
 });
 exports.verifyEmailSchema = zod_1.z.object({
-    email: zod_1.z.string().email(),
-    otp: zod_1.z
-        .string()
-        .length(6),
+    email: zod_1.z.email(),
+    otp: zod_1.z.string().length(6),
 });
