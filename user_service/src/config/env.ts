@@ -20,4 +20,8 @@ export const env = cleanEnv(process.env, {
   JWT_REFRESH_SECRET: str(),
 
   REDIS_URL: str(),
+
+  JWT_ACCESS_EXPIRES: str(),
+
+  JWT_REFRESH_EXPIRES: str(),
 });

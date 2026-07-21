@@ -1,31 +1,38 @@
-import jwt from "jsonwebtoken";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import { env } from "../config/env";
 
-interface JwtPayload {
+export interface AccessTokenPayload {
   userId: string;
   role: string;
 }
 
-export const generateAccessToken = (
-  payload: JwtPayload
-) => {
-  return jwt.sign(
-    payload,
-    env.JWT_ACCESS_SECRET,
-    {
-      expiresIn: "15m",
-    }
-  );
-};
+export interface RefreshTokenPayload {
+  userId: string;
+  sessionId: string;
+}
 
-export const generateRefreshToken = (
-  payload: JwtPayload
-) => {
-  return jwt.sign(
-    payload,
-    env.JWT_REFRESH_SECRET,
-    {
-      expiresIn: "7d",
-    }
-  );
-};
+export function generateAccessToken(payload: AccessTokenPayload) {
+  return jwt.sign(payload, env.JWT_ACCESS_SECRET as Secret, {
+    expiresIn: env.JWT_ACCESS_EXPIRES as SignOptions["expiresIn"],
+  });
+}
+
+export function generateRefreshToken(payload: RefreshTokenPayload) {
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET as Secret, {
+    expiresIn: env.JWT_REFRESH_EXPIRES as SignOptions["expiresIn"],
+  });
+}
+
+export function verifyAccessToken(token: string) {
+  return jwt.verify(
+    token,
+    env.JWT_ACCESS_SECRET as Secret
+  ) as AccessTokenPayload;
+}
+
+export function verifyRefreshToken(token: string) {
+  return jwt.verify(
+    token,
+    env.JWT_REFRESH_SECRET as Secret
+  ) as RefreshTokenPayload;
+}
