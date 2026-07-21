@@ -4,7 +4,7 @@ exports.authController = void 0;
 const auth_validator_1 = require("../validators/auth.validator");
 const auth_service_1 = require("../services/auth.service");
 class AuthController {
-    async register(req, res, next) {
+    register = async (req, res, next) => {
         try {
             const validatedData = auth_validator_1.registerSchema.parse(req.body);
             const response = await auth_service_1.authService.register(validatedData);
@@ -13,16 +13,26 @@ class AuthController {
         catch (error) {
             next(error);
         }
-    }
-    async verifyEmail(req, res, next) {
+    };
+    verifyEmail = async (req, res, next) => {
         try {
             const validatedData = auth_validator_1.verifyEmailSchema.parse(req.body);
-            const result = await auth_service_1.authService.verifyEmail(validatedData);
-            return res.status(200).json(result);
+            const response = await auth_service_1.authService.verifyEmail(validatedData, req.headers["x-device"], req.ip, req.headers["user-agent"]);
+            return res.status(200).json(response);
         }
         catch (error) {
             next(error);
         }
-    }
+    };
+    login = async (req, res, next) => {
+        try {
+            const validatedData = auth_validator_1.loginSchema.parse(req.body);
+            const response = await auth_service_1.authService.login(validatedData.email, validatedData.password, req.headers["x-device"], req.ip, req.headers["user-agent"]);
+            return res.status(200).json(response);
+        }
+        catch (error) {
+            next(error);
+        }
+    };
 }
 exports.authController = new AuthController();

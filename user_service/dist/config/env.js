@@ -19,4 +19,6 @@ exports.env = (0, envalid_1.cleanEnv)(process.env, {
     JWT_ACCESS_SECRET: (0, envalid_1.str)(),
     JWT_REFRESH_SECRET: (0, envalid_1.str)(),
     REDIS_URL: (0, envalid_1.str)(),
+    JWT_ACCESS_EXPIRES: (0, envalid_1.str)(),
+    JWT_REFRESH_EXPIRES: (0, envalid_1.str)(),
 });

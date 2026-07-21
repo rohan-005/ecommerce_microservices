@@ -20,6 +20,10 @@ export const verifyEmailSchema = z.object({
   email: z.email(),
   otp: z.string().length(6),
 });
+export const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
 
 export type VerifyEmailDto = z.infer<typeof verifyEmailSchema>;
 

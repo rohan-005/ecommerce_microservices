@@ -1,6 +1,5 @@
 import User from "../models/User";
 import { IUser } from "../interfaces/user.interface";
-import PendingRegistration from "../models/PendingRegistration";
 
 export class UserRepository {
   async create(userData: Partial<IUser>) {
@@ -8,11 +7,20 @@ export class UserRepository {
   }
 
   async findByEmail(email: string) {
-    return PendingRegistration.findOne({ email }).select("+password +otp");
+    return User.findOne({
+      email: email.toLowerCase(),
+    }).select("+password");
   }
-  
+
   async findById(id: string) {
     return User.findById(id);
+  }
+
+  async update(userId: string, data: Partial<IUser>) {
+    return User.findByIdAndUpdate(userId, data, {
+      new: true,
+      runValidators: true,
+    });
   }
 
   async updateVerificationStatus(userId: string) {
@@ -23,7 +31,7 @@ export class UserRepository {
       },
       {
         new: true,
-      },
+      }
     );
   }
 

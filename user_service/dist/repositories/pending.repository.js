@@ -10,16 +10,23 @@ class PendingRepository {
         return PendingRegistration_1.default.create(data);
     }
     async findByEmail(email) {
-        return PendingRegistration_1.default.findOne({ email }).select("+password");
+        return PendingRegistration_1.default.findOne({
+            email: email.toLowerCase(),
+        }).select("+password +otp");
     }
     async deleteByEmail(email) {
-        return PendingRegistration_1.default.deleteOne({ email });
+        return PendingRegistration_1.default.deleteOne({
+            email: email.toLowerCase(),
+        });
     }
     async replace(data) {
         await PendingRegistration_1.default.deleteOne({
-            email: data.email,
+            email: data.email?.toLowerCase(),
         });
-        return PendingRegistration_1.default.create(data);
+        return PendingRegistration_1.default.create({
+            ...data,
+            email: data.email?.toLowerCase(),
+        });
     }
 }
 exports.PendingRepository = PendingRepository;

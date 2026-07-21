@@ -27,6 +27,7 @@ const pendingRegistrationSchema = new Schema<IPendingRegistration>(
     otp: {
       type: String,
       required: true,
+      select: false,
     },
 
     expiresAt: {
@@ -47,26 +48,28 @@ const pendingRegistrationSchema = new Schema<IPendingRegistration>(
   }
 );
 
+/**
+ * Password is ALREADY hashed in AuthService.register().
+ * Only hash the OTP here.
+ */
 pendingRegistrationSchema.pre("save", async function () {
-  if (this.isModified("password")) {
-    this.password = await bcrypt.hash(this.password, 12);
+  if (!this.isModified("otp")) {
+    return;
   }
 
-  if (this.isModified("otp")) {
-    this.otp = await bcrypt.hash(this.otp, 10);
-  }
+  this.otp = await bcrypt.hash(this.otp, 10);
 });
-pendingRegistrationSchema.methods.compareOTP =
-async function (candidateOTP: string) {
 
-    return bcrypt.compare(
-        candidateOTP,
-        this.otp
-    );
-
+pendingRegistrationSchema.methods.compareOTP = async function (
+  candidateOTP: string
+): Promise<boolean> {
+  return bcrypt.compare(candidateOTP, this.otp);
 };
 
-pendingRegistrationSchema.index({ email: 1 }, { unique: true });
+pendingRegistrationSchema.index(
+  { email: 1 },
+  { unique: true }
+);
 
 const PendingRegistration = mongoose.model<IPendingRegistration>(
   "PendingRegistration",

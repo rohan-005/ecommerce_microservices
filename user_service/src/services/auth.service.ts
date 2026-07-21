@@ -1,13 +1,17 @@
+import { Types } from "mongoose";
+
 import { ApiError } from "../utils/ApiError";
+import { comparePassword, hashPassword } from "../utils/password";
+import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import { generateOTP } from "../utils/otp";
+
 import { RegisterDto, VerifyEmailDto } from "../validators/auth.validator";
+
 import { userRepository } from "../repositories/user.repository";
 import { pendingRepository } from "../repositories/pending.repository";
-import { generateOTP } from "../utils/otp";
+
 import { eventPublisher } from "../events/publisher";
-import { hashPassword } from "../utils/password";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
-import { IPendingRegistration } from "../interfaces/pending-registration.interface";
-import PendingRegistration from "../models/PendingRegistration";
+import { sessionService } from "./session.service";
 
 class AuthService {
   async register(data: RegisterDto) {
@@ -25,7 +29,7 @@ class AuthService {
 
     await pendingRepository.replace({
       name: data.name,
-      email: data.email,
+      email: data.email.toLowerCase(),
       password: hashedPassword,
       otp,
       expiresAt,
@@ -38,15 +42,13 @@ class AuthService {
       message: "Verification OTP sent successfully.",
     };
   }
-  async replace(data: Partial<IPendingRegistration>) {
-    await PendingRegistration.findOneAndDelete({
-      email: data.email,
-    });
 
-    return PendingRegistration.create(data);
-  }
-
-  async verifyEmail(data: VerifyEmailDto) {
+  async verifyEmail(
+    data: VerifyEmailDto,
+    device?: string,
+    ip?: string,
+    userAgent?: string,
+  ) {
     const pending = await pendingRepository.findByEmail(data.email);
 
     if (!pending) {
@@ -67,37 +69,108 @@ class AuthService {
 
     const user = await userRepository.create({
       name: pending.name,
-
       email: pending.email,
-
       password: pending.password,
-
       isVerified: true,
     });
 
     await pendingRepository.deleteByEmail(pending.email);
 
+    const sessionId = new Types.ObjectId().toHexString();
+
     const accessToken = generateAccessToken({
       userId: user.id,
-
       role: user.role,
     });
 
     const refreshToken = generateRefreshToken({
       userId: user.id,
-
-      role: user.role,
+      sessionId,
     });
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await sessionService.createSession(
+      sessionId,
+      user.id,
+      refreshToken,
+      expiresAt,
+      device,
+      ip,
+      userAgent,
+    );
 
     return {
       success: true,
-
       message: "Email verified successfully.",
-
-      user,
-
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
       accessToken,
+      refreshToken,
+    };
+  }
 
+  async login(
+    email: string,
+    password: string,
+    device?: string,
+    ip?: string,
+    userAgent?: string,
+  ) {
+    const user = await userRepository.findByEmail(email);
+
+    if (!user) {
+      throw new ApiError(401, "Invalid email or password");
+    }
+
+    const passwordMatched = await comparePassword(password, user.password);
+
+    if (!passwordMatched) {
+      throw new ApiError(401, "Invalid email or password");
+    }
+
+    if (!user.isVerified) {
+      throw new ApiError(403, "Email is not verified");
+    }
+
+    const sessionId = new Types.ObjectId().toHexString();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    const refreshToken = generateRefreshToken({
+      userId: user.id,
+      sessionId,
+    });
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await sessionService.createSession(
+      sessionId,
+      user.id,
+      refreshToken,
+      expiresAt,
+      device,
+      ip,
+      userAgent,
+    );
+
+    return {
+      success: true,
+      message: "Login successful",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+      accessToken,
       refreshToken,
     };
   }

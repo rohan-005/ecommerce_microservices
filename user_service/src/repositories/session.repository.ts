@@ -1,9 +1,16 @@
+import { Types } from "mongoose";
 import Session from "../models/Session";
 import { ISession } from "../interfaces/session.interface";
 
 class SessionRepository {
-  async create(data: Partial<ISession>) {
-    return Session.create(data);
+  async create(
+    sessionId: string,
+    data: Partial<ISession>
+  ) {
+    return Session.create({
+      _id: new Types.ObjectId(sessionId),
+      ...data,
+    });
   }
 
   async findById(id: string) {

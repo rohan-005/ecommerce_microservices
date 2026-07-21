@@ -7,19 +7,26 @@ export class PendingRepository {
   }
 
   async findByEmail(email: string) {
-    return PendingRegistration.findOne({ email }).select("+password");
+    return PendingRegistration.findOne({
+      email: email.toLowerCase(),
+    }).select("+password +otp");
   }
 
   async deleteByEmail(email: string) {
-    return PendingRegistration.deleteOne({ email });
+    return PendingRegistration.deleteOne({
+      email: email.toLowerCase(),
+    });
   }
 
   async replace(data: Partial<IPendingRegistration>) {
     await PendingRegistration.deleteOne({
-      email: data.email,
+      email: data.email?.toLowerCase(),
     });
 
-    return PendingRegistration.create(data);
+    return PendingRegistration.create({
+      ...data,
+      email: data.email?.toLowerCase(),
+    });
   }
 }
 
