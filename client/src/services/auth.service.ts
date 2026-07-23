@@ -1,5 +1,21 @@
-import { registerUser, verifyEmailOTP, loginUser } from '../api/auth.api';
-import type { RegisterRequest, VerifyEmailRequest, LoginRequest } from '../types/auth';
+import { 
+  registerUser, 
+  verifyEmailOTP, 
+  loginUser,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword,
+  refreshToken
+} from '../api/auth.api';
+import type { 
+  RegisterRequest, 
+  VerifyEmailRequest, 
+  LoginRequest,
+  ForgotPasswordRequest,
+  VerifyResetOTPRequest,
+  ResetPasswordRequest,
+  RefreshTokenRequest
+} from '../types/auth';
 
 export const AuthService = {
   register: async (data: RegisterRequest) => {
@@ -12,5 +28,21 @@ export const AuthService = {
 
   login: async (data: LoginRequest) => {
     return await loginUser(data);
+  },
+
+  forgotPassword: async (data: ForgotPasswordRequest) => {
+    return await forgotPassword(data);
+  },
+
+  verifyResetOTP: async (data: VerifyResetOTPRequest) => {
+    return await verifyResetOTP(data);
+  },
+
+  resetPassword: async (data: ResetPasswordRequest) => {
+    return await resetPassword(data);
+  },
+
+  refreshToken: async (data: RefreshTokenRequest) => {
+    return await refreshToken(data);
   },
 };

@@ -10,6 +10,7 @@ const user_repository_1 = require("../repositories/user.repository");
 const pending_repository_1 = require("../repositories/pending.repository");
 const publisher_1 = require("../events/publisher");
 const session_service_1 = require("./session.service");
+const password_reset_repository_1 = require("../repositories/password-reset.repository");
 class AuthService {
     async register(data) {
         const existingUser = await user_repository_1.userRepository.findByEmail(data.email);
@@ -169,6 +170,38 @@ class AuthService {
         return {
             success: true,
             message: "Logged out successfully",
+        };
+    }
+    async forgotPassword(email) {
+        const user = await user_repository_1.userRepository.findByEmail(email);
+        if (!user) {
+            throw new ApiError_1.ApiError(404, "User not found");
+        }
+        const otp = (0, otp_1.generateOTP)();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        await password_reset_repository_1.passwordResetRepository.replace({
+            email,
+            otp,
+            expiresAt,
+        });
+        await publisher_1.eventPublisher.publishPasswordResetEmail(email, otp);
+        return {
+            success: true,
+            message: "Password reset OTP sent successfully.",
+        };
+    }
+    async verifyResetOTP(email, otp) {
+        const resetRequest = await password_reset_repository_1.passwordResetRepository.findByEmail(email);
+        if (!resetRequest) {
+            throw new ApiError_1.ApiError(404, "Password reset request not found or expired.");
+        }
+        const isValid = await resetRequest.compareOTP(otp);
+        if (!isValid) {
+            throw new ApiError_1.ApiError(400, "Invalid OTP.");
+        }
+        return {
+            success: true,
+            message: "OTP verified successfully.",
         };
     }
 }

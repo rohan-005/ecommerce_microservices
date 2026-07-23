@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logoutSchema = exports.refreshTokenSchema = exports.loginSchema = exports.verifyEmailSchema = exports.registerSchema = void 0;
+exports.resetPasswordSchema = exports.verifyResetOtpSchema = exports.forgotPasswordSchema = exports.logoutSchema = exports.refreshTokenSchema = exports.loginSchema = exports.verifyEmailSchema = exports.registerSchema = void 0;
 const zod_1 = require("zod");
 exports.registerSchema = zod_1.z.object({
     name: zod_1.z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -28,4 +28,22 @@ exports.refreshTokenSchema = zod_1.z.object({
 });
 exports.logoutSchema = zod_1.z.object({
     refreshToken: zod_1.z.string().min(1, "Refresh token is required"),
+});
+exports.forgotPasswordSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        email: zod_1.z.string().email(),
+    }),
+});
+exports.verifyResetOtpSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        email: zod_1.z.string().email(),
+        otp: zod_1.z.string().length(6, "OTP must be exactly 6 digits"),
+    }),
+});
+exports.resetPasswordSchema = zod_1.z.object({
+    body: zod_1.z.object({
+        email: zod_1.z.string().email(),
+        otp: zod_1.z.string().length(6, "OTP must be exactly 6 digits"),
+        password: zod_1.z.string().min(8, "Password must be at least 8 characters"),
+    }),
 });

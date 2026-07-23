@@ -1,13 +1,51 @@
-let memoryAccessToken: string | null = null;
-let memoryRefreshToken: string | null = null;
+const ACCESS_TOKEN_KEY = 'accessToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const USER_KEY = 'user';
 
-export const setTokens = (accessToken: string | null, refreshToken: string | null) => {
-  memoryAccessToken = accessToken;
-  memoryRefreshToken = refreshToken;
+export const saveAccessToken = (token: string) => {
+  localStorage.setItem(ACCESS_TOKEN_KEY, token);
 };
 
-export const getAccessToken = () => memoryAccessToken;
-export const getRefreshToken = () => memoryRefreshToken;
+export const getAccessToken = () => {
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
+};
+
+export const saveRefreshToken = (token: string) => {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+};
+
+export const getRefreshToken = () => {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+};
+
+export const saveUser = (user: any) => {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+};
+
+export const getUser = () => {
+  const user = localStorage.getItem(USER_KEY);
+  return user ? JSON.parse(user) : null;
+};
+
+export const clearAuth = () => {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
+
+export const setTokens = (accessToken: string | null, refreshToken: string | null) => {
+  if (accessToken) {
+    saveAccessToken(accessToken);
+  } else {
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+  }
+  
+  if (refreshToken) {
+    saveRefreshToken(refreshToken);
+  } else {
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+};
 
 export const parseJwt = (token: string) => {
   try {

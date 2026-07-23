@@ -1,6 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import toast from "react-hot-toast";
-import { getAccessToken } from "../utils/token";
+import { getAccessToken, getRefreshToken, setTokens, clearAuth } from "../utils/token";
 
 const API_BASE_URL = "http://localhost:5001/api/v1";
 
@@ -25,13 +25,50 @@ api.interceptors.request.use(
   },
 );
 
-// Response Interceptor: Handle errors globally with toasts
+// Response Interceptor: Handle errors globally with toasts and refresh token
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const status = error.response?.status;
+    
+    // Skip interceptor for refresh token endpoint itself to avoid loops
+    if (originalRequest.url === '/auth/refresh-token') {
+      return Promise.reject(error);
+    }
+
+    if (status === 401 && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+        
+        // Call refresh token endpoint directly with axios to avoid interceptors
+        const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+          refreshToken
+        });
+        
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.data;
+        
+        setTokens(newAccessToken, newRefreshToken);
+        
+        // Update header and retry request
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return api(originalRequest);
+        
+      } catch (refreshError) {
+        clearAuth();
+        // Trigger a reload or redirect
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
     const data = error.response?.data as
       | { message?: string; success?: boolean }
       | undefined;
@@ -40,8 +77,6 @@ api.interceptors.response.use(
 
     if (status === 401) {
       toast.error(errorMessage || "Session expired. Please log in again.");
-      // Optionally we could trigger window.dispatchEvent(new Event('auth-logout'))
-      // or similar to clean up state if needed.
     } else if (status === 404) {
       toast.error(errorMessage || "Requested resource not found (404).");
     } else if (status === 500) {

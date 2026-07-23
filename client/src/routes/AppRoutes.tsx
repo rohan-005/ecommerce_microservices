@@ -10,6 +10,9 @@ import Register from '../pages/Register';
 import VerifyEmail from '../pages/VerifyEmail';
 import Profile from '../pages/Profile';
 import NotFound from '../pages/NotFound';
+import ForgotPassword from '../pages/ForgotPassword';
+import VerifyResetOTP from '../pages/VerifyResetOTP';
+import ResetPassword from '../pages/ResetPassword';
 
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -60,6 +63,9 @@ export const AppRoutes: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-reset-otp" element={<VerifyResetOTP />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* Authenticated Only Routes */}

@@ -20,16 +20,14 @@ class EventPublisher {
         });
         console.log(`Verification email event published. Stream ID: ${id}`);
     }
-    async publishPasswordResetEmail(email, name, otp) {
-        const id = await redis_1.redisClient.xAdd(EMAIL_STREAM, "*", {
+    async publishPasswordResetEmail(email, otp) {
+        await redis_1.redisClient.xAdd("email-stream", "*", {
             data: JSON.stringify({
-                type: EmailEventType.SEND_PASSWORD_RESET_EMAIL,
+                type: "PASSWORD_RESET",
                 email,
-                name,
                 otp,
             }),
         });
-        console.log(`Password reset event published. Stream ID: ${id}`);
     }
 }
 exports.eventPublisher = new EventPublisher();

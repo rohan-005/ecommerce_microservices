@@ -5,50 +5,42 @@ import * as z from 'zod';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useAuth } from '../hooks/useAuth';
 import { AuthService } from '../services/auth.service';
-import type { LoginRequest } from '../types/auth';
+import type { ForgotPasswordRequest } from '../types/auth';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import Card from '../components/common/Card';
-import { LogIn } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 
-const loginSchema = z.object({
+const forgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
-  password: z.string().min(1, { message: 'Password is required' }),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-export const Login: React.FC = () => {
+export const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
       email: '',
-      password: '',
     },
   });
 
   const mutation = useMutation({
-    mutationFn: (data: LoginRequest) => AuthService.login(data),
-    onSuccess: (data) => {
-      toast.success(data.message || 'Login successful!');
-      login(data); // Stores user, accessToken, refreshToken in context
-      navigate('/profile');
-    },
-    onError: () => {
-      // Axios interceptor handles toast notifications automatically
+    mutationFn: (data: ForgotPasswordRequest) => AuthService.forgotPassword(data),
+    onSuccess: (data, variables) => {
+      toast.success(data.message || 'OTP sent to your email!');
+      navigate('/verify-reset-otp', { state: { email: variables.email } });
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
+  const onSubmit = (data: ForgotPasswordFormValues) => {
     mutation.mutate(data);
   };
 
@@ -57,11 +49,11 @@ export const Login: React.FC = () => {
       <Card className="w-full max-w-md">
         <div className="flex flex-col items-center space-y-4 mb-6">
           <div className="p-3 bg-blue-50 rounded-full text-primary">
-            <LogIn className="w-6 h-6" />
+            <KeyRound className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 text-center">Login to Account</h2>
+          <h2 className="text-2xl font-bold text-slate-800 text-center">Forgot Password</h2>
           <p className="text-sm text-slate-500 text-center">
-            Sign in to test authenticated endpoints and profile access.
+            Enter your email address and we'll send you an OTP to reset your password.
           </p>
         </div>
 
@@ -75,35 +67,20 @@ export const Login: React.FC = () => {
             {...register('email')}
           />
 
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            disabled={mutation.isPending}
-            {...register('password')}
-          />
-
-          <div className="flex justify-end">
-            <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary-hover">
-              Forgot Password?
-            </Link>
-          </div>
-
           <Button
             type="submit"
             fullWidth
             isLoading={mutation.isPending}
             className="mt-6"
           >
-            Sign In
+            Send OTP
           </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-500">
-          Don't have an account?{' '}
-          <Link to="/register" className="font-semibold text-primary hover:text-primary-hover">
-            Register here
+          Remember your password?{' '}
+          <Link to="/login" className="font-semibold text-primary hover:text-primary-hover">
+            Back to Login
           </Link>
         </p>
       </Card>
@@ -111,4 +88,4 @@ export const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;

@@ -8,4 +8,6 @@ router.post("/verify-email", auth_controller_1.authController.verifyEmail.bind(a
 router.post("/login", auth_controller_1.authController.login.bind(auth_controller_1.authController));
 router.post("/refresh-token", auth_controller_1.authController.refreshToken);
 router.post("/logout", auth_controller_1.authController.logout);
+router.post("/forgot-password", auth_controller_1.authController.forgotPassword);
+router.post("/verify-reset-otp", auth_controller_1.authController.verifyResetOTP);
 exports.default = router;
