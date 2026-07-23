@@ -233,6 +233,37 @@ class AuthService {
       refreshToken: newRefreshToken,
     };
   }
+  async logout(refreshToken: string) {
+    let payload;
+
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    const session = await sessionService.validateSession(payload.sessionId);
+
+    if (!session) {
+      throw new ApiError(401, "Session not found or expired");
+    }
+
+    const isValid = await sessionService.verifyRefreshToken(
+      payload.sessionId,
+      refreshToken,
+    );
+
+    if (!isValid) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    await sessionService.revokeSession(payload.sessionId);
+
+    return {
+      success: true,
+      message: "Logged out successfully",
+    };
+  }
 }
 
 export const authService = new AuthService();

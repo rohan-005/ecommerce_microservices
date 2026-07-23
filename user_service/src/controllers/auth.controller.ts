@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   loginSchema,
+  logoutSchema,
   refreshTokenSchema,
   registerSchema,
   verifyEmailSchema,
@@ -67,6 +68,17 @@ class AuthController {
         // message: "Token refreshed successfully",
         ...tokens,
       });
+    } catch (error) {
+      next(error);
+    }
+  };
+  logout = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { refreshToken } = logoutSchema.parse(req.body);
+
+      const result = await authService.logout(refreshToken);
+
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
