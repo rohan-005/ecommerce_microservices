@@ -162,7 +162,7 @@ I identified key software engineering concepts used and where they appear.
 
 6) Password hashing & OTP hashing
 - Where: `PendingRegistration` pre-save hook (bcrypt), `utils/password.ts`
-- Mistakes: storing plaintext.
+- Mistakes: storing plaintext.  
 - Difficulty: 4/10
 
 7) Input validation (Zod)

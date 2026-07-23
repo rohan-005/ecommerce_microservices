@@ -34,5 +34,19 @@ class AuthController {
             next(error);
         }
     };
+    refreshToken = async (req, res, next) => {
+        try {
+            const { refreshToken } = auth_validator_1.refreshTokenSchema.parse(req.body);
+            const tokens = await auth_service_1.authService.refreshToken(refreshToken);
+            res.status(200).json({
+                // success: true,
+                // message: "Token refreshed successfully",
+                ...tokens,
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    };
 }
 exports.authController = new AuthController();

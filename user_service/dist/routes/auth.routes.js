@@ -6,4 +6,5 @@ const router = (0, express_1.Router)();
 router.post("/register", auth_controller_1.authController.register.bind(auth_controller_1.authController));
 router.post("/verify-email", auth_controller_1.authController.verifyEmail.bind(auth_controller_1.authController));
 router.post("/login", auth_controller_1.authController.login.bind(auth_controller_1.authController));
+router.post("/refresh-token", auth_controller_1.authController.refreshToken);
 exports.default = router;

@@ -3,10 +3,7 @@ import Session from "../models/Session";
 import { ISession } from "../interfaces/session.interface";
 
 class SessionRepository {
-  async create(
-    sessionId: string,
-    data: Partial<ISession>
-  ) {
+  async create(sessionId: string, data: Partial<ISession>) {
     return Session.create({
       _id: new Types.ObjectId(sessionId),
       ...data,
@@ -32,7 +29,7 @@ class SessionRepository {
       },
       {
         new: true,
-      }
+      },
     );
   }
 
@@ -45,7 +42,23 @@ class SessionRepository {
       userId,
     });
   }
+
+  async updateRefreshToken(
+    sessionId: string,
+    refreshTokenHash: string,
+    expiresAt: Date,
+  ) {
+    return Session.findByIdAndUpdate(
+      sessionId,
+      {
+        refreshTokenHash,
+        expiresAt,
+      },
+      {
+        new: true,
+      },
+    );
+  }
 }
 
-export const sessionRepository =
-  new SessionRepository();
+export const sessionRepository = new SessionRepository();

@@ -112,5 +112,42 @@ class AuthService {
             refreshToken,
         };
     }
+    async refreshToken(refreshToken) {
+        let payload;
+        try {
+            payload = (0, jwt_1.verifyRefreshToken)(refreshToken);
+        }
+        catch {
+            throw new ApiError_1.ApiError(401, "Invalid refresh token");
+        }
+        const session = await session_service_1.sessionService.validateSession(payload.sessionId);
+        if (!session) {
+            throw new ApiError_1.ApiError(401, "Invalid or expired session");
+        }
+        const isValid = await session_service_1.sessionService.verifyRefreshToken(payload.sessionId, refreshToken);
+        if (!isValid) {
+            throw new ApiError_1.ApiError(401, "Invalid refresh token");
+        }
+        const user = await user_repository_1.userRepository.findById(payload.userId);
+        if (!user) {
+            throw new ApiError_1.ApiError(404, "User not found");
+        }
+        const newAccessToken = (0, jwt_1.generateAccessToken)({
+            userId: user.id,
+            role: user.role,
+        });
+        const newRefreshToken = (0, jwt_1.generateRefreshToken)({
+            userId: user.id,
+            sessionId: payload.sessionId,
+        });
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        await session_service_1.sessionService.rotateRefreshToken(payload.sessionId, newRefreshToken, expiresAt);
+        return {
+            success: true,
+            message: "Token refreshed successfully",
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        };
+    }
 }
 exports.authService = new AuthService();

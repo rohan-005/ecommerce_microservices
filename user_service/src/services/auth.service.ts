@@ -2,7 +2,11 @@ import { Types } from "mongoose";
 
 import { ApiError } from "../utils/ApiError";
 import { comparePassword, hashPassword } from "../utils/password";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/jwt";
 import { generateOTP } from "../utils/otp";
 
 import { RegisterDto, VerifyEmailDto } from "../validators/auth.validator";
@@ -63,7 +67,6 @@ class AuthService {
 
     if (pending.expiresAt.getTime() < Date.now()) {
       await pendingRepository.deleteByEmail(data.email);
-
       throw new ApiError(400, "OTP expired.");
     }
 
@@ -172,6 +175,62 @@ class AuthService {
       },
       accessToken,
       refreshToken,
+    };
+  }
+
+  async refreshToken(refreshToken: string) {
+    let payload;
+
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    const session = await sessionService.validateSession(payload.sessionId);
+
+    if (!session) {
+      throw new ApiError(401, "Invalid or expired session");
+    }
+
+    const isValid = await sessionService.verifyRefreshToken(
+      payload.sessionId,
+      refreshToken,
+    );
+
+    if (!isValid) {
+      throw new ApiError(401, "Invalid refresh token");
+    }
+
+    const user = await userRepository.findById(payload.userId);
+
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const newAccessToken = generateAccessToken({
+      userId: user.id,
+      role: user.role,
+    });
+
+    const newRefreshToken = generateRefreshToken({
+      userId: user.id,
+      sessionId: payload.sessionId,
+    });
+
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await sessionService.rotateRefreshToken(
+      payload.sessionId,
+      newRefreshToken,
+      expiresAt,
+    );
+
+    return {
+      success: true,
+      message: "Token refreshed successfully",
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
     };
   }
 }

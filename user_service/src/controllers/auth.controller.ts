@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import {
   loginSchema,
+  refreshTokenSchema,
   registerSchema,
   verifyEmailSchema,
 } from "../validators/auth.validator";
@@ -8,11 +9,7 @@ import {
 import { authService } from "../services/auth.service";
 
 class AuthController {
-  register = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  register = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validatedData = registerSchema.parse(req.body);
 
@@ -24,11 +21,7 @@ class AuthController {
     }
   };
 
-  verifyEmail = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validatedData = verifyEmailSchema.parse(req.body);
 
@@ -36,7 +29,7 @@ class AuthController {
         validatedData,
         req.headers["x-device"] as string,
         req.ip,
-        req.headers["user-agent"]
+        req.headers["user-agent"],
       );
 
       return res.status(200).json(response);
@@ -45,11 +38,7 @@ class AuthController {
     }
   };
 
-  login = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validatedData = loginSchema.parse(req.body);
 
@@ -58,10 +47,26 @@ class AuthController {
         validatedData.password,
         req.headers["x-device"] as string,
         req.ip,
-        req.headers["user-agent"]
+        req.headers["user-agent"],
       );
 
       return res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { refreshToken } = refreshTokenSchema.parse(req.body);
+
+      const tokens = await authService.refreshToken(refreshToken);
+
+      res.status(200).json({
+        // success: true,
+        // message: "Token refreshed successfully",
+        ...tokens,
+      });
     } catch (error) {
       next(error);
     }

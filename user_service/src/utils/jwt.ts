@@ -26,13 +26,13 @@ export function generateRefreshToken(payload: RefreshTokenPayload) {
 export function verifyAccessToken(token: string) {
   return jwt.verify(
     token,
-    env.JWT_ACCESS_SECRET as Secret
+    env.JWT_ACCESS_SECRET as Secret,
   ) as AccessTokenPayload;
 }
 
 export function verifyRefreshToken(token: string) {
   return jwt.verify(
     token,
-    env.JWT_REFRESH_SECRET as Secret
+    env.JWT_REFRESH_SECRET as Secret,
   ) as RefreshTokenPayload;
 }
