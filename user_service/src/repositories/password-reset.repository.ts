@@ -1,12 +1,7 @@
 import PasswordReset from "../models/PasswordReset";
 
-
 class PasswordResetRepository {
-  async create(data: {
-    email: string;
-    otp: string;
-    expiresAt: Date;
-  }) {
+  async create(data: { email: string; otp: string; expiresAt: Date }) {
     return PasswordReset.create(data);
   }
 
@@ -16,11 +11,7 @@ class PasswordResetRepository {
     });
   }
 
-  async replace(data: {
-    email: string;
-    otp: string;
-    expiresAt: Date;
-  }) {
+  async replace(data: { email: string; otp: string; expiresAt: Date }) {
     await PasswordReset.deleteOne({
       email: data.email.toLowerCase(),
     });
@@ -35,5 +26,4 @@ class PasswordResetRepository {
   }
 }
 
-export const passwordResetRepository =
-  new PasswordResetRepository();
+export const passwordResetRepository = new PasswordResetRepository();

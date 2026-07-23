@@ -8,6 +8,7 @@ import {
 } from "../validators/auth.validator";
 
 import { authService } from "../services/auth.service";
+import { ApiResponse } from "../utils/ApiResponse";
 
 class AuthController {
   register = async (req: Request, res: Response, next: NextFunction) => {
@@ -79,6 +80,28 @@ class AuthController {
       const result = await authService.logout(refreshToken);
 
       res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+  forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.body;
+
+      const result = await authService.forgotPassword(email);
+
+      res.status(200).json(new ApiResponse(200, result.message));
+    } catch (error) {
+      next(error);
+    }
+  };
+  verifyResetOTP = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email, otp } = req.body;
+
+      const result = await authService.verifyResetOTP(email, otp);
+
+      res.status(200).json(new ApiResponse(200, result.message));
     } catch (error) {
       next(error);
     }

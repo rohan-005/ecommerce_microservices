@@ -16,6 +16,7 @@ import { pendingRepository } from "../repositories/pending.repository";
 
 import { eventPublisher } from "../events/publisher";
 import { sessionService } from "./session.service";
+import { passwordResetRepository } from "../repositories/password-reset.repository";
 
 class AuthService {
   async register(data: RegisterDto) {
@@ -262,6 +263,50 @@ class AuthService {
     return {
       success: true,
       message: "Logged out successfully",
+    };
+  }
+  async forgotPassword(email: string) {
+    const user = await userRepository.findByEmail(email);
+
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const otp = generateOTP();
+
+    const expiresAt = new Date(
+      Date.now() + 10 * 60 * 1000, // 10 minutes
+    );
+
+    await passwordResetRepository.replace({
+      email,
+      otp,
+      expiresAt,
+    });
+
+    await eventPublisher.publishPasswordResetEmail(email, otp);
+
+    return {
+      success: true,
+      message: "Password reset OTP sent successfully.",
+    };
+  }
+  async verifyResetOTP(email: string, otp: string) {
+    const resetRequest = await passwordResetRepository.findByEmail(email);
+
+    if (!resetRequest) {
+      throw new ApiError(404, "Password reset request not found or expired.");
+    }
+
+    const isValid = await resetRequest.compareOTP(otp);
+
+    if (!isValid) {
+      throw new ApiError(400, "Invalid OTP.");
+    }
+
+    return {
+      success: true,
+      message: "OTP verified successfully.",
     };
   }
 }
