@@ -2,28 +2,35 @@ import { mailTransporter } from "../config/mail";
 import { env } from "../config/env";
 import { otpTemplate } from "../templates/otp.template";
 import { Logger } from "../utils/logger";
+import { passwordResetTemplate } from "../templates/password-reset.template";
 
 export class EmailService {
+  async sendVerificationEmail(
+    email: string,
+    name: string,
+    otp: string,
+  ): Promise<void> {
+    await mailTransporter.sendMail({
+      from: env.EMAIL_FROM,
 
-    async sendVerificationEmail(
-        email: string,
-        name: string,
-        otp: string
-    ): Promise<void> {
+      to: email,
 
-        await mailTransporter.sendMail({
+      subject: "Verify Your Email",
 
-            from: env.EMAIL_FROM,
+      html: otpTemplate(name, otp),
+    });
 
-            to: email,
+    Logger.success(`Verification email sent to ${email}`);
+  }
 
-            subject: "Verify Your Email",
+  async sendPasswordResetEmail(email: string, otp: string) {
+    return mailTransporter.sendMail({
+      to: email,
 
-            html: otpTemplate(name, otp)
+      subject: "Reset your password",
 
-        });
-
-        Logger.success(`Verification email sent to ${email}`);
-    }
+      html: passwordResetTemplate(otp),
+    });
+  }
 
 }

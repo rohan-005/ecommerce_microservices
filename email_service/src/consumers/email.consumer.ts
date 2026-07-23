@@ -10,96 +10,69 @@ const CONSUMER = "email-consumer-1";
 const emailService = new EmailService();
 
 export async function createConsumerGroup() {
+  try {
+    await redisClient.xGroupCreate(STREAM, GROUP, "0", {
+      MKSTREAM: true,
+    });
 
-    try {
+    Logger.success("Consumer group created.");
+  } catch (error: any) {
+    if (error?.message?.includes("BUSYGROUP")) {
+      Logger.info("Consumer group already exists.");
 
-        await redisClient.xGroupCreate(
-            STREAM,
-            GROUP,
-            "0",
-            {
-                MKSTREAM: true
-            }
-        );
-
-        Logger.success("Consumer group created.");
-
-    } catch (error: any) {
-
-        if (error?.message?.includes("BUSYGROUP")) {
-
-            Logger.info("Consumer group already exists.");
-
-            return;
-        }
-
-        throw error;
+      return;
     }
+
+    throw error;
+  }
 }
 
-
 export async function startConsumer() {
+  while (true) {
+    try {
+      const response = await redisClient.xReadGroup(
+        GROUP,
+        CONSUMER,
+        [
+          {
+            key: STREAM,
+            id: ">",
+          },
+        ],
+        {
+          COUNT: 1,
+          BLOCK: 0,
+        },
+      );
 
-    while (true) {
+      if (!response) continue;
 
-        try {
+      for (const stream of response) {
+        for (const message of stream.messages) {
+          const event: EmailEvent = JSON.parse(message.message.data);
 
-            const response = await redisClient.xReadGroup(
-                GROUP,
-                CONSUMER,
-                [
-                    {
-                        key: STREAM,
-                        id: ">"
-                    }
-                ],
-                {
-                    COUNT: 1,
-                    BLOCK: 0
-                }
-            );
+          switch (event.type) {
+            case "EMAIL_VERIFICATION":
+              await emailService.sendVerificationEmail(
+                event.email,
+                event.name!, // <-- pass name
+                event.otp,
+              );
+              break;
 
-            if (!response)
-                continue;
+            case "PASSWORD_RESET":
+              await emailService.sendPasswordResetEmail(event.email, event.otp);
+              break;
 
-            for (const stream of response) {
+            default:
+              console.log("Unknown email event");
+          }
 
-                for (const message of stream.messages) {
-
-                    const event: EmailEvent =
-                        JSON.parse(message.message.data);
-
-                    switch (event.type) {
-
-                        case EmailEventType.SEND_VERIFICATION_EMAIL:
-
-                            await emailService.sendVerificationEmail(
-                                event.email,
-                                event.name,
-                                event.otp
-                            );
-
-                            break;
-                    }
-
-                    await redisClient.xAck(
-                        STREAM,
-                        GROUP,
-                        message.id
-                    );
-
-                }
-
-            }
-
+          await redisClient.xAck(STREAM, GROUP, message.id);
         }
-
-        catch (error) {
-
-            Logger.error("Consumer Error", error);
-
-        }
-
+      }
+    } catch (error) {
+      Logger.error("Consumer Error", error);
     }
-
+  }
 }

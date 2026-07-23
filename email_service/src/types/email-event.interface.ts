@@ -1,11 +1,13 @@
-export enum EmailEventType {
-    SEND_VERIFICATION_EMAIL = "SEND_VERIFICATION_EMAIL",
-    SEND_PASSWORD_RESET_EMAIL = "SEND_PASSWORD_RESET_EMAIL",
-}
+export type EmailEventType =
+  | "EMAIL_VERIFICATION"
+  | "PASSWORD_RESET";
 
 export interface EmailEvent {
-    type: EmailEventType;
-    email: string;
-    name: string;
-    otp: string;
+  type: EmailEventType;
+
+  email: string;
+
+  otp: string;
+
+  name?: string;
 }

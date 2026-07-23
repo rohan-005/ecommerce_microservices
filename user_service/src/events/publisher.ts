@@ -11,43 +11,30 @@ class EventPublisher {
   async publishVerificationEmail(
     email: string,
     name: string,
-    otp: string
+    otp: string,
   ): Promise<void> {
-    const id = await redisClient.xAdd(
-      EMAIL_STREAM,
-      "*",
-      {
-        data: JSON.stringify({
-          type: EmailEventType.SEND_VERIFICATION_EMAIL,
-          email,
-          name,
-          otp,
-        }),
-      }
-    );
+    const id = await redisClient.xAdd(EMAIL_STREAM, "*", {
+      data: JSON.stringify({
+        type: EmailEventType.SEND_VERIFICATION_EMAIL,
+        email,
+        name,
+        otp,
+      }),
+    });
 
     console.log(`Verification email event published. Stream ID: ${id}`);
   }
 
-  async publishPasswordResetEmail(
-    email: string,
-    name: string,
-    otp: string
-  ): Promise<void> {
-    const id = await redisClient.xAdd(
-      EMAIL_STREAM,
-      "*",
-      {
-        data: JSON.stringify({
-          type: EmailEventType.SEND_PASSWORD_RESET_EMAIL,
-          email,
-          name,
-          otp,
-        }),
-      }
-    );
+  async publishPasswordResetEmail(email: string, otp: string) {
+    await redisClient.xAdd("email-stream", "*", {
+      data: JSON.stringify({
+        type: "PASSWORD_RESET",
 
-    console.log(`Password reset event published. Stream ID: ${id}`);
+        email,
+
+        otp,
+      }),
+    });
   }
 }
 
